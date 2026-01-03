@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 French  :
 
 | Lettre | Coordonnées       | Forme décrite                    | Zone / Règle |
@@ -59,66 +58,3 @@ English Version :
 | w      | [2,5,8,7,6]       | double V                         | Bottom       |
 | x      | [0,2,6,8]         | diagonal cross                   | Diagonal     |
 | y      | [1,5,7]           | bifurcation                      | Mixed        |
-=======
-French  :
-
-| Lettre | Coordonnées       | Forme décrite                    | Zone / Règle |
-|--------|-------------------|----------------------------------|--------------|
-| a      | [0,3,6]           | colonne gauche                   | Verticale    |
-| b      | [0,1,3]           | angle haut gauche                | Haut         |
-| c      | [0,1,2]           | ligne supérieure                 | Haut         |
-| d      | [2,5,8]           | colonne droite                   | Verticale    |
-| e      | [0,1,3,6]         | demi-bloc gauche                 | Gauche       |
-| f      | [0,3,6,7]         | crochet bas gauche               | Colonne      |
-| g      | [1,3,6]           | diagonale descendante gauche     | Diagonale    |
-| h      | [0,3,6,3,5]       | colonne + barre centrale         | Mixte        |
-| i      | [1,7]             | axe vertical central             | Colonne      |
-| j      | [2,5,8,7]         | crochet bas droit                | Bas          |
-| k      | [0,3,1,5,8]       | branche + diagonale              | Mixte        |
-| l      | [0,3,6,7]         | colonne gauche + pied            | Bas          |
-| m      | [0,3,1,5]         | double montée                    | Haut         |
-| n      | [0,3,1,5]         | colonne + diagonale              | Mixte        |
-| o      | [0,1,2,5,8,7,6,3] | cercle périphérique              | Boucle       |
-| p      | [0,1,2,3]         | demi-boucle haute                | Haut         |
-| q      | [0,1,2,5,8,7]     | boucle + queue                   | Boucle       |
-| r      | [0,1,3,5]         | demi-boucle + jambe              | Mixte        |
-| s      | [2,1,0,3,6,7,8]   | serpentin                        | Zigzag       |
-| t      | [1,7,3]           | croix simplifiée                 | Axe          |
-| u      | [3,6,7,8,5]       | cuvette basse                    | Bas          |
-| v      | [2,7,6]           | V inversé                        | Diagonale    |
-| w      | [2,5,8,7,6]       | double V                         | Bas          |
-| x      | [0,2,6,8]         | croix diagonale                  | Diagonale    |
-| y      | [1,5,7]           | bifurcation                      | Mixte        |
-| z      | [0,1,2,3,6,7,8]   | zigzag complet                   | Zigzag       |
-
-English Version : 
-
-| Letter | Coordinates       | Described Shape                  | Zone / Rule  |
-|--------|-------------------|----------------------------------|--------------|
-| a      | [0,3,6]           | left column                      | Vertical     |
-| b      | [0,1,3]           | top left angle                   | Top          |
-| c      | [0,1,2]           | top line                         | Top          |
-| d      | [2,5,8]           | right column                     | Vertical     |
-| e      | [0,1,3,6]         | left half-block                  | Left         |
-| f      | [0,3,6,7]         | bottom left hook                 | Column       |
-| g      | [1,3,6]           | left descending diagonal         | Diagonal     |
-| h      | [0,3,6,3,5]       | column + central bar             | Mixed        |
-| i      | [1,7]             | central vertical axis            | Column       |
-| j      | [2,5,8,7]         | bottom right hook                | Bottom       |
-| k      | [0,3,1,5,8]       | branch + diagonal                | Mixed        |
-| l      | [0,3,6,7]         | left column + foot               | Bottom       |
-| m      | [0,3,1,5]         | double rise                      | Top          |
-| n      | [0,3,1,5]         | column + diagonal                | Mixed        |
-| o      | [0,1,2,5,8,7,6,3] | peripheral circle                | Loop         |
-| p      | [0,1,2,3]         | high half-loop                   | Top          |
-| q      | [0,1,2,5,8,7]     | loop + tail                      | Loop         |
-| r      | [0,1,3,5]         | half-loop + leg                  | Mixed        |
-| s      | [2,1,0,3,6,7,8]   | serpentine                       | Zigzag       |
-| t      | [1,7,3]           | simplified cross                 | Axis         |
-| u      | [3,6,7,8,5]       | bottom cup                       | Bottom       |
-| v      | [2,7,6]           | inverted V                       | Diagonal     |
-| w      | [2,5,8,7,6]       | double V                         | Bottom       |
-| x      | [0,2,6,8]         | diagonal cross                   | Diagonal     |
-| y      | [1,5,7]           | bifurcation                      | Mixed        |
->>>>>>> e436c5755119257589f0db71e41936b0e56a3182
-| z      | [0,1,2,3,6,7,8]   | complete zigzag                  | Zigzag       |
