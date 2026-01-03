@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 FRENCH VERSION -
 
 RÈGLES GÉNÉRALES DU DICTIONNAIRE – SPATIAL DECRYPTION
@@ -48,55 +48,3 @@ GENERAL DICTIONARY RULES – SPATIAL DECRYPTION
 
 - Letters must NEVER:
   • backtrack unnecessarily
-=======
-FRENCH VERSION -
-
-RÈGLES GÉNÉRALES DU DICTIONNAIRE – SPATIAL DECRYPTION
-
-- La grille est une matrice 3x3 indexée de 0 à 8 :
-
-  [0] [1] [2]
-  [3] [4] [5]
-  [6] [7] [8]
-
-- La case centrale (4) est INTERDITE pour les lettres simples.
-  Elle est réservée aux symboles spéciaux ou séparateurs.
-
-- Une lettre est définie par :
-  • une suite de coordonnées
-  • une forme visuelle logique
-  • une direction simple (ligne, angle, diagonale)
-
-- Les majuscules utilisent EXACTEMENT la même forme que les minuscules.
-  La casse est gérée au niveau logique, pas spatial.
-
-- Les lettres ne doivent JAMAIS :
-  • revenir en arrière inutilement
-  • traverser la grille sans logique visuelle
-
-
-ENGLISH VERSION -
-
-GENERAL DICTIONARY RULES – SPATIAL DECRYPTION
-
-- The grid is a 3x3 matrix indexed from 0 to 8:
-
-  [0] [1] [2]
-  [3] [4] [5]
-  [6] [7] [8]
-
-- The central cell (4) is FORBIDDEN for simple letters.
-  It is reserved for special symbols or separators.
-
-- A letter is defined by:
-  • a sequence of coordinates
-  • a logical visual shape
-  • a simple direction (line, angle, diagonal)
-
-- Uppercase letters use EXACTLY the same shape as lowercase letters.
-  Case is handled at the logical level, not spatially.
-
-- Letters must NEVER:
-  • backtrack unnecessarily
->>>>>>> e436c5755119257589f0db71e41936b0e56a3182
-  • cross the grid without visual logic
