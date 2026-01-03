@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -127,4 +128,128 @@
     </div>
     <script src="Encrypt.js"></script>
   </body>
+=======
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Spatial Decryption</title>
+      <link rel="icon" type="image/png" sizes="32x32" href="favicons/favicon-32x32.png">
+      <link rel="icon" type="image/png" sizes="16x16" href="favicons/favicon-16x16.png">
+      <link rel="apple-touch-icon" sizes="180x180" href="favicons/apple-touch-icon.png">
+      <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="container">
+      <main class="app">
+        <div class="background">
+          <h1>Welcome to Spatial Decryption</h1>
+          <p>This web page allows you to encrypt your data with a unique system.</p>
+          <img src="Spatial-logo.png" alt="Spatial Decryption Logo" class="main-logo">
+          <p><b>Made by Samy Asselah</b></p>
+          <div class="controls">
+            <input class="input-text" type="text" placeholder="Write in here ur text" id="inputText" />
+            <button class="encrypt-button" id="encryptButton">
+              <span>Encrypt</span>
+            </button>
+          </div>
+          
+          <button class="decrypt-button" id="decryptButton">
+            <span class="decrypt-text">Start decryption</span>
+            <span class="decrypt-arrow">→</span>
+          </button>
+          <div class="decrypt-result" id="decryptResult">
+            <div class="result-header">
+              <span class="result-title">Decryption result</span>
+            </div>
+            <div class="result-content" id="resultContent">
+              <span class="result-placeholder">The decrypted text will appear here...</span>
+            </div>
+            <button class="copy-button" id="copyButton">
+              <span>Copy</span>
+            </button>
+          </div>
+          <div class="grill" id="grill">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+          </div>
+          <div class="action-buttons">
+            <button class="action-btn space-btn" id="spaceBtn">
+              <span class="btn-icon">⚡</span>
+              <div class="btn-content">
+                <span class="btn-title">Space</span>
+                <span class="btn-subtitle">Press all cells at once</span>
+              </div>
+            </button>
+            <button class="action-btn next-btn" id="nextBtn">
+              <span class="btn-icon">➜</span>
+              <div class="btn-content">
+                <span class="btn-title">Next Letter</span>
+                <span class="btn-subtitle">Move to next character</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </main>
+
+      <aside class="dictionary">
+        <div class="lang-switch">
+          <button class="lang-btn active" data-lang="en">🇬🇧 EN</button>
+          <button class="lang-btn" data-lang="fr">🇫🇷 FR</button>
+        </div>
+        
+        <details open>
+          <summary data-translate="dict-title">📘 Spatial Dictionary</summary>
+          
+          <section class="dict-rules">
+            <h3 data-translate="rules-title">General Rules</h3>
+            <div class="rule-item">
+              <p data-translate="rule-grid">The grid is a 3×3 matrix indexed from 0 to 8:</p>
+              <pre>0 1 2
+3 4 5
+6 7 8</pre>
+            </div>
+            <div class="rule-item">
+              <p data-translate="rule-center">The central cell (4) is <b>FORBIDDEN</b> for simple letters. It is reserved for special symbols or separators.</p>
+            </div>
+            <div class="rule-item">
+              <p data-translate="rule-letter">A letter is defined by:</p>
+              <ul>
+                <li data-translate="rule-coords">a sequence of coordinates</li>
+                <li data-translate="rule-visual">a logical visual shape</li>
+                <li data-translate="rule-direction">a simple direction (line, angle, diagonal)</li>
+              </ul>
+            </div>
+            <div class="rule-item">
+              <p data-translate="rule-case">Uppercase letters use EXACTLY the same shape as lowercase letters. Case is handled at the logical level, not spatially.</p>
+            </div>
+            <div class="rule-item">
+              <p data-translate="rule-never">Letters must NEVER:</p>
+              <ul>
+                <li data-translate="rule-backtrack">backtrack unnecessarily</li>
+                <li data-translate="rule-cross">cross the grid without visual logic</li>
+              </ul>
+            </div>
+          </section>
+
+          <section class="dict-letters">
+            <h3 data-translate="letters-title">Letter Patterns</h3>
+            <div class="letter-grid" id="letterGrid">
+              <!-- Generated by JS -->
+            </div>
+          </section>
+        </details>
+      </aside>
+    </div>
+    <script src="Encrypt.js"></script>
+  </body>
+>>>>>>> e436c5755119257589f0db71e41936b0e56a3182
 </html>
