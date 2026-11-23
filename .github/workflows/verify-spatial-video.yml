@@ -1,0 +1,97 @@
+name: Spatial Decryption browser verification
+on:
+  push:
+    branches: [verify-spatial-video]
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - run: node --test
+      - name: Install browser test client
+        run: npm install --prefix "$RUNNER_TEMP/spatial-browser" --no-package-lock --no-save playwright@1.55.0
+      - name: Verify the example, video download, decoding and clipboard
+        run: |
+          mkdir -p "$RUNNER_TEMP/spatial-server"
+          ln -s "$GITHUB_WORKSPACE" "$RUNNER_TEMP/spatial-server/Spatial-Decryption"
+          python3 -m http.server 8123 --bind 127.0.0.1 --directory "$RUNNER_TEMP/spatial-server" &
+          spatial_http=$!
+          trap 'kill "$spatial_http"' EXIT
+          NODE_PATH="$RUNNER_TEMP/spatial-browser/node_modules" node <<'NODE'
+          const assert = require('node:assert/strict');
+          const { readFile } = require('node:fs/promises');
+          const { chromium } = require('playwright');
+          (async () => {
+            const { encodeText } = await import('./spatial-code.mjs');
+            const browser = await chromium.launch({ channel: 'chrome' });
+            try {
+              const context = await browser.newContext({
+                viewport: { width: 375, height: 812 },
+                permissions: ['clipboard-read', 'clipboard-write'],
+              });
+              const page = await context.newPage();
+              const errors = [];
+              page.on('pageerror', error => errors.push(error.message));
+              await page.goto('http://localhost:8123/Spatial-Decryption/');
+              const text = page.getByRole('textbox', { name: 'Your message' });
+              const play = page.getByRole('button', { name: 'Play animation' });
+              const decode = page.getByRole('button', { name: 'Start decoding' });
+              const stop = page.getByRole('button', { name: 'Stop', exact: true });
+              assert.equal(await page.locator('.letter-item').count(), 26);
+              assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+              await text.fill('Été 2026!');
+              await play.click();
+              await page.getByText(/unsupported/).waitFor();
+              await page.getByRole('button', { name: 'Try an example' }).click();
+              assert.equal(await text.inputValue(), 'Salut O');
+              await play.click();
+              assert.equal(await decode.isEnabled(), false);
+              await stop.click();
+              await page.getByText(/Playback stopped/).waitFor();
+              await play.click();
+              await page.getByText(/Video ready/).waitFor({ timeout: 20000 });
+
+              const downloadLink = page.getByRole('link', { name: 'Download video' });
+              const [download] = await Promise.all([page.waitForEvent('download'), downloadLink.click()]);
+              assert.match(download.suggestedFilename(), /\.(webm|mp4)$/);
+              assert.ok((await readFile(await download.path())).length > 10000);
+              await page.getByText('Replay video', { exact: true }).click();
+              await page.waitForFunction(() => {
+                const video = document.querySelector('video');
+                return video.readyState >= 2 && video.videoWidth === 960 && video.videoHeight === 540;
+              });
+              await page.locator('video').evaluate(video => video.play());
+              await page.waitForFunction(() => document.querySelector('video').currentTime > 0.25);
+              await page.locator('video').evaluate(video => video.pause());
+
+              await decode.click();
+              assert.equal(await page.evaluate(() => document.activeElement.textContent.trim()), '0');
+              const next = page.getByRole('button', { name: 'Add character' });
+              const cell = index => page.getByRole('button', { name: String(index), exact: true });
+              await cell(4).press('Space');
+              await next.click();
+              await page.getByText(/Unknown pattern/).waitFor();
+              assert.equal(await cell(4).getAttribute('aria-pressed'), 'true');
+              await page.getByRole('button', { name: 'Clear selection' }).click();
+              for (const pattern of encodeText('Salut O')) {
+                if (pattern.isSpace) {
+                  await page.getByRole('button', { name: 'Select space' }).click();
+                } else {
+                  for (const index of [...pattern.cells].reverse()) await cell(index).press('Space');
+                }
+                await next.click();
+              }
+              assert.equal(await page.locator('#resultContent').textContent(), 'Salut O');
+              await page.getByRole('button', { name: 'Copy', exact: true }).click();
+              await page.getByText('Message copied.', { exact: true }).waitFor();
+              assert.equal(await page.evaluate(() => navigator.clipboard.readText()), 'Salut O');
+              assert.deepEqual(errors, []);
+              console.log('Verified 3D video playback and download, 375px layout, stop, invalid input, keyboard decoding and clipboard.');
+            } finally {
+              await browser.close();
+            }
+          })().catch(error => { console.error(error); process.exitCode = 1; });
+          NODE
