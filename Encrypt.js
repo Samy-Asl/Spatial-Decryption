@@ -1,352 +1,313 @@
-// ================== TIMINGS ==================
-const t_cell = 80;
-const t_mod = 120;
-const t_letter_gap = 300;
-const t_space = 500;
+import { CELLS, LETTERS, MAX_LENGTH, decodePattern, encodeText } from './spatial-code.mjs';
+import { createGrid, recordGrid } from './spatial-grid.mjs';
 
-// ================== DOM ==================
-const cells = document.querySelectorAll(".cell");
-const input = document.getElementById("inputText");
-const button = document.getElementById("encryptButton");
-const resultContent = document.getElementById("resultContent");
-const nextBtn = document.getElementById("nextBtn");
-const decryptButton = document.getElementById("decryptButton");
-const spaceBtn = document.getElementById("spaceBtn");
-const copyButton = document.getElementById("copyButton");
+const form = document.getElementById('playForm');
+const input = document.getElementById('inputText');
+const playButton = document.getElementById('encryptButton');
+const stopButton = document.getElementById('stopButton');
+const exampleButton = document.getElementById('exampleButton');
+const download = document.getElementById('downloadVideo');
+const videoPreview = document.getElementById('videoPreview');
+const recordedVideo = document.getElementById('recordedVideo');
+const playStatus = document.getElementById('playStatus');
+const decodeButton = document.getElementById('decryptButton');
+const decodeControls = document.getElementById('decodeControls');
+const cells = [...document.querySelectorAll('.cell')];
+const decodeResult = document.getElementById('decryptResult');
+const decodedOutput = document.getElementById('resultContent');
+const resultPlaceholder = document.getElementById('resultPlaceholder');
+const decodeStatus = document.getElementById('decodeStatus');
+const copyButton = document.getElementById('copyButton');
+const clearResultButton = document.getElementById('clearResult');
+const canvas = document.getElementById('gridCanvas');
+const grid = createGrid(canvas);
+const selection = new Set();
 
-// ================== TRANSLATIONS ==================
+let mode = 'idle';
+let playback;
+let decoded = '';
+
+function setMode(nextMode) {
+  mode = nextMode;
+  const playing = mode === 'playing';
+  const decoding = mode === 'decoding';
+  input.readOnly = playing;
+  exampleButton.disabled = playing;
+  playButton.disabled = playing;
+  playButton.hidden = playing;
+  stopButton.hidden = !playing;
+  stopButton.disabled = !playing;
+  decodeButton.disabled = playing;
+  clearResultButton.disabled = playing || decoded === '';
+  decodeButton.textContent = decoding ? 'Exit decoding' : 'Start decoding';
+  decodeButton.setAttribute('aria-expanded', decoding);
+  decodeControls.hidden = !decoding;
+  if (decoding) decodeResult.hidden = false;
+}
+
+function showStatus(element, message, isError = false) {
+  element.textContent = message;
+  element.classList.toggle('error', isError);
+}
+
+function drawSelection() {
+  for (const [index, cell] of cells.entries()) {
+    cell.setAttribute('aria-pressed', selection.has(index));
+  }
+  grid.draw([...selection]);
+}
+
+function clearSelection() {
+  selection.clear();
+  drawSelection();
+}
+
+function clearVideo() {
+  if (download.hasAttribute('href')) {
+    recordedVideo.pause();
+    recordedVideo.removeAttribute('src');
+    recordedVideo.load();
+    URL.revokeObjectURL(download.href);
+  }
+  download.removeAttribute('href');
+  download.removeAttribute('download');
+  download.setAttribute('aria-disabled', 'true');
+  videoPreview.open = false;
+  videoPreview.hidden = true;
+}
+
+function offerVideo(blob) {
+  const extension = blob.type.startsWith('video/mp4') ? 'mp4' : 'webm';
+  download.href = URL.createObjectURL(blob);
+  download.download = `spatial-decryption.${extension}`;
+  download.removeAttribute('aria-disabled');
+  recordedVideo.src = download.href;
+  videoPreview.hidden = false;
+}
+
+async function playMessage(patterns) {
+  const focusWasInPlayback = [playButton, input].includes(document.activeElement);
+  clearVideo();
+  clearSelection();
+  showStatus(decodeStatus, '');
+  playback = new AbortController();
+  setMode('playing');
+  if (focusWasInPlayback) stopButton.focus();
+
+  let finishRecording;
+  try {
+    finishRecording = recordGrid(canvas);
+  } catch (error) {
+    console.warn('Unable to record the grid:', error);
+  }
+
+  try {
+    const completed = await grid.play(patterns, playback.signal, position => {
+      showStatus(playStatus, `Playing character ${position} of ${patterns.length}…`);
+    });
+    const abortMessage = playback.signal.reason;
+    stopButton.disabled = true;
+    if (completed && finishRecording) showStatus(playStatus, 'Preparing your video…');
+
+    const video = await finishRecording?.();
+    if (completed && video?.size) {
+      offerVideo(video);
+      showStatus(playStatus, 'Video ready. Replay it here or download it to decode it later.');
+    } else if (completed) {
+      showStatus(playStatus, 'This browser could not record the animation. Try another browser to save a video.', true);
+    } else {
+      showStatus(playStatus, abortMessage);
+    }
+  } catch (error) {
+    console.error('Unable to finish playback:', error);
+    showStatus(playStatus, 'Something went wrong during playback. Try playing the message again.', true);
+  } finally {
+    const returnFocus = document.activeElement === stopButton || document.activeElement === document.body;
+    playback = undefined;
+    setMode('idle');
+    grid.draw();
+    if (returnFocus) playButton.focus();
+  }
+}
+
+form.addEventListener('submit', event => {
+  event.preventDefault();
+  if (mode === 'playing') return;
+
+  let patterns;
+  try {
+    patterns = encodeText(input.value);
+  } catch (error) {
+    input.setAttribute('aria-invalid', 'true');
+    showStatus(playStatus, error.message, true);
+    input.focus();
+    return;
+  }
+
+  input.removeAttribute('aria-invalid');
+  playMessage(patterns);
+});
+
+input.addEventListener('input', () => {
+  if (input.hasAttribute('aria-invalid')) {
+    input.removeAttribute('aria-invalid');
+    showStatus(playStatus, '');
+  }
+});
+
+exampleButton.addEventListener('click', () => {
+  input.value = 'Salut O';
+  input.removeAttribute('aria-invalid');
+  showStatus(playStatus, 'Play the example, then replay its video to decode it.');
+  playButton.focus();
+});
+
+stopButton.addEventListener('click', () => playback?.abort('Playback stopped. Play again to save a complete video.'));
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && !stopButton.disabled) {
+    playback?.abort('Playback stopped when the tab was hidden. Keep this tab open during recording.');
+  }
+});
+
+decodeButton.addEventListener('click', () => {
+  clearSelection();
+  showStatus(decodeStatus, '');
+  if (mode === 'decoding') {
+    setMode('idle');
+  } else {
+    setMode('decoding');
+    cells[0].focus();
+  }
+});
+
+for (const [index, cell] of cells.entries()) {
+  cell.addEventListener('click', () => {
+    if (selection.has(index)) selection.delete(index);
+    else selection.add(index);
+    showStatus(decodeStatus, '');
+    drawSelection();
+  });
+}
+
+document.getElementById('spaceBtn').addEventListener('click', () => {
+  CELLS.forEach(index => selection.add(index));
+  showStatus(decodeStatus, 'Space selected. Choose Add character to confirm.');
+  drawSelection();
+});
+
+document.getElementById('clearPattern').addEventListener('click', () => {
+  clearSelection();
+  showStatus(decodeStatus, 'Selection cleared.');
+  cells[0].focus();
+});
+
+function updateResult() {
+  decodedOutput.textContent = decoded;
+  decodedOutput.hidden = decoded === '';
+  resultPlaceholder.hidden = decoded !== '';
+  copyButton.disabled = decoded === '';
+  clearResultButton.disabled = decoded === '';
+}
+
+document.getElementById('nextBtn').addEventListener('click', () => {
+  const character = decodePattern(selection);
+  if (character === null) {
+    const message = selection.size ? 'Unknown pattern. Check the dictionary and adjust your selection.' : 'Select at least one cell first.';
+    showStatus(decodeStatus, message, true);
+    return;
+  }
+
+  if (decoded.length === MAX_LENGTH) {
+    showStatus(decodeStatus, `The message has ${MAX_LENGTH} characters. Copy it or reset the result.`, true);
+    return;
+  }
+
+  decoded += character;
+  updateResult();
+  clearSelection();
+  showStatus(decodeStatus, '');
+  cells[0].focus();
+});
+
+clearResultButton.addEventListener('click', () => {
+  decoded = '';
+  updateResult();
+  clearSelection();
+  showStatus(decodeStatus, 'Result cleared.');
+  if (mode === 'decoding') cells[0].focus();
+  else decodeButton.focus();
+});
+
+copyButton.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(decoded);
+    showStatus(decodeStatus, 'Message copied.');
+  } catch {
+    showStatus(decodeStatus, 'Could not copy automatically. Select the decoded text to copy it.', true);
+  }
+});
+
+document.getElementById('logoLink').addEventListener('click', async () => {
+  const notification = document.getElementById('copyNotif');
+  try {
+    await navigator.clipboard.writeText(new URL('.', location.href).href);
+    showStatus(notification, 'Page link copied.');
+  } catch {
+    showStatus(notification, 'Could not copy the page link.', true);
+  }
+});
+
 const translations = {
   en: {
-    "dict-title": "📘 Spatial Dictionary",
-    "rules-title": "General Rules",
-    "rule-grid": "The grid is a 3×3 matrix indexed from 0 to 8:",
-    "rule-center": "The central cell (4) is <b>FORBIDDEN</b> for simple letters. It is reserved for special symbols or separators.",
-    "rule-letter": "A letter is defined by:",
-    "rule-coords": "a sequence of coordinates",
-    "rule-visual": "a logical visual shape",
-    "rule-direction": "a simple direction (line, angle, diagonal)",
-    "rule-case": "Uppercase letters use EXACTLY the same shape as lowercase letters. Case is handled at the logical level, not spatially.",
-    "rule-never": "Letters must NEVER:",
-    "rule-backtrack": "backtrack unnecessarily",
-    "rule-cross": "cross the grid without visual logic",
-    "letters-title": "Letter Patterns",
-    "left-column": "left column",
-    "top-left": "top left corner",
-    "top-line": "top line",
-    "right-column": "right column",
-    "left-half": "left half block",
-    "bottom-left": "bottom left bracket",
-    "diagonal-left": "left descending diagonal",
-    "column-bar": "column + center bar",
-    "vertical-axis": "central vertical axis",
-    "bottom-right": "bottom right bracket",
-    "branch-diag": "branch + diagonal",
-    "column-foot": "left column + foot",
-    "double-rise": "double rise",
-    "column-diag": "column + diagonal",
-    "outer-circle": "outer circle",
-    "top-half": "top half loop",
-    "loop-tail": "loop + tail",
-    "half-leg": "half loop + leg",
-    "serpentine": "serpentine",
-    "simple-cross": "simplified cross",
-    "low-bowl": "low bowl",
-    "inverted-v": "inverted V",
-    "double-v": "double V",
-    "diagonal-cross": "diagonal cross",
-    "bifurcation": "bifurcation",
-    "full-zigzag": "full zigzag"
+    title: 'Spatial dictionary',
+    grid: 'Read the grid from left to right and top to bottom.',
+    order: 'For decoding, select the same numbered cells in any order.',
+    center: 'Add the blue center (4) for uppercase.',
+    space: 'Select all nine cells for a space.',
+    patterns: 'Letter patterns',
   },
   fr: {
-    "dict-title": "📘 Dictionnaire Spatial",
-    "rules-title": "Règles Générales",
-    "rule-grid": "La grille est une matrice 3×3 indexée de 0 à 8 :",
-    "rule-center": "La case centrale (4) est <b>INTERDITE</b> pour les lettres simples. Elle est réservée aux symboles spéciaux ou séparateurs.",
-    "rule-letter": "Une lettre est définie par :",
-    "rule-coords": "une suite de coordonnées",
-    "rule-visual": "une forme visuelle logique",
-    "rule-direction": "une direction simple (ligne, angle, diagonale)",
-    "rule-case": "Les majuscules utilisent EXACTEMENT la même forme que les minuscules. La casse est gérée au niveau logique, pas spatial.",
-    "rule-never": "Les lettres ne doivent JAMAIS :",
-    "rule-backtrack": "revenir en arrière inutilement",
-    "rule-cross": "traverser la grille sans logique visuelle",
-    "letters-title": "Motifs des Lettres",
-    "left-column": "colonne gauche",
-    "top-left": "angle haut gauche",
-    "top-line": "ligne supérieure",
-    "right-column": "colonne droite",
-    "left-half": "demi-bloc gauche",
-    "bottom-left": "crochet bas gauche",
-    "diagonal-left": "diagonale descendante gauche",
-    "column-bar": "colonne + barre centrale",
-    "vertical-axis": "axe vertical central",
-    "bottom-right": "crochet bas droit",
-    "branch-diag": "branche + diagonale",
-    "column-foot": "colonne gauche + pied",
-    "double-rise": "double montée",
-    "column-diag": "colonne + diagonale",
-    "outer-circle": "cercle périphérique",
-    "top-half": "demi-boucle haute",
-    "loop-tail": "boucle + queue",
-    "half-leg": "demi-boucle + jambe",
-    "serpentine": "serpentin",
-    "simple-cross": "croix simplifiée",
-    "low-bowl": "cuvette basse",
-    "inverted-v": "V inversé",
-    "double-v": "double V",
-    "diagonal-cross": "croix diagonale",
-    "bifurcation": "bifurcation",
-    "full-zigzag": "zigzag complet"
-  }
+    title: 'Dictionnaire spatial',
+    grid: 'Lis la grille de gauche à droite et de haut en bas.',
+    order: 'Pour décoder, sélectionne les mêmes cases dans l’ordre de ton choix.',
+    center: 'Ajoute la case centrale bleue (4) pour une majuscule.',
+    space: 'Sélectionne les neuf cases pour un espace.',
+    patterns: 'Motifs des lettres',
+  },
 };
 
-// ================== LETTER DICTIONARY ==================
-const LETTERS = {
-  a: { coords: [0,3,6], desc: "left-column" },
-  b: { coords: [0,1,3], desc: "top-left" },
-  c: { coords: [0,1,2], desc: "top-line" },
-  d: { coords: [2,5,8], desc: "right-column" },
-  e: { coords: [0,1,3,6], desc: "left-half" },
-  f: { coords: [0,3,6,7], desc: "bottom-left" },
-  g: { coords: [1,3,6], desc: "diagonal-left" },
-  h: { coords: [0,3,6,5], desc: "column-bar" },
-  i: { coords: [1,7], desc: "vertical-axis" },
-  j: { coords: [2,5,8,7], desc: "bottom-right" },
-  k: { coords: [0,3,1,5,8], desc: "branch-diag" },
-  l: { coords: [0,3,6,7], desc: "column-foot" },
-  m: { coords: [0,3,1,5], desc: "double-rise" },
-  n: { coords: [0,3,1,5], desc: "column-diag" },
-  o: { coords: [0,1,2,5,8,7,6,3], desc: "outer-circle" },
-  p: { coords: [0,1,2,3], desc: "top-half" },
-  q: { coords: [0,1,2,5,8,7], desc: "loop-tail" },
-  r: { coords: [0,1,3,5], desc: "half-leg" },
-  s: { coords: [2,1,0,3,6,7,8], desc: "serpentine" },
-  t: { coords: [1,7,3], desc: "simple-cross" },
-  u: { coords: [3,6,7,8,5], desc: "low-bowl" },
-  v: { coords: [2,7,6], desc: "inverted-v" },
-  w: { coords: [2,5,8,7,6], desc: "double-v" },
-  x: { coords: [0,2,6,8], desc: "diagonal-cross" },
-  y: { coords: [1,5,7], desc: "bifurcation" },
-  z: { coords: [0,1,2,3,6,7,8], desc: "full-zigzag" }
-};
-
-// ================== LANGUAGE SYSTEM ==================
-let currentLang = 'en';
-
-function translatePage() {
-  document.querySelectorAll('[data-translate]').forEach(el => {
-    const key = el.getAttribute('data-translate');
-    if (translations[currentLang][key]) {
-      el.innerHTML = translations[currentLang][key];
+const languageButtons = [...document.querySelectorAll('.lang-btn')];
+for (const button of languageButtons) {
+  button.addEventListener('click', () => {
+    const lang = button.dataset.lang;
+    document.getElementById('dictionaryDetails').lang = lang;
+    for (const item of languageButtons) {
+      item.setAttribute('aria-pressed', item === button);
+    }
+    for (const element of document.querySelectorAll('[data-translate]')) {
+      element.textContent = translations[lang][element.dataset.translate];
     }
   });
-  generateLetterGrid();
 }
 
-function generateLetterGrid() {
-  const grid = document.getElementById('letterGrid');
-  if (!grid) return;
-  
-  grid.innerHTML = '';
-  
-  for (const [letter, data] of Object.entries(LETTERS)) {
-    const item = document.createElement('div');
-    item.className = 'letter-item';
-    
-    const char = document.createElement('span');
-    char.className = 'letter-char';
-    char.textContent = letter;
-    
-    const coords = document.createElement('span');
-    coords.className = 'letter-coords';
-    coords.textContent = `[${data.coords.join(',')}]`;
-    
-    const desc = document.createElement('span');
-    desc.className = 'letter-desc';
-    desc.textContent = translations[currentLang][data.desc] || data.desc;
-    
-    item.appendChild(char);
-    item.appendChild(coords);
-    item.appendChild(desc);
-    grid.appendChild(item);
+const dictionary = document.getElementById('letterGrid');
+for (const [letter, indices] of Object.entries(LETTERS)) {
+  const item = document.createElement('div');
+  item.className = 'letter-item';
+  const character = document.createElement('span');
+  character.className = 'letter-char';
+  character.textContent = letter;
+  const coordinates = document.createElement('span');
+  coordinates.className = 'letter-coords';
+  coordinates.textContent = indices.join(' · ');
+  const miniGrid = document.createElement('span');
+  miniGrid.className = 'mini-grid';
+  miniGrid.setAttribute('aria-hidden', 'true');
+  for (const index of CELLS) {
+    const dot = document.createElement('span');
+    dot.classList.toggle('filled', indices.includes(index));
+    miniGrid.append(dot);
   }
+  item.append(character, coordinates, miniGrid);
+  dictionary.append(item);
 }
-
-// Language switch
-document.querySelectorAll('.lang-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentLang = btn.getAttribute('data-lang');
-    translatePage();
-  });
-});
-
-// ================== UTILS ==================
-function clearGrid() {
-  cells.forEach(c => c.classList.remove("active", "space-flash"));
-}
-
-function activateCell(i) {
-  cells[i]?.classList.add("active");
-}
-
-function activateAll() {
-  cells.forEach(c => c.classList.add("active"));
-}
-
-function wait(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
-
-// ================== ENCRYPT ==================
-async function animateLetter(char) {
-  clearGrid();
-
-  if (char === " ") {
-    activateAll();
-    cells.forEach(c => c.classList.add("space-flash"));
-    await wait(t_space);
-    clearGrid();
-    return;
-  }
-
-  const isUpper = char === char.toUpperCase();
-  const letter = LETTERS[char.toLowerCase()];
-  if (!letter) return;
-
-  for (const i of letter.coords) {
-    activateCell(i);
-    await wait(t_cell);
-  }
-
-  if (isUpper) {
-    await wait(t_mod);
-    activateCell(4);
-  }
-
-  await wait(t_letter_gap);
-  clearGrid();
-}
-
-async function encryptText(text) {
-  for (const c of text) {
-    await animateLetter(c);
-  }
-}
-
-button.addEventListener("click", () => {
-  encryptText(input.value);
-});
-
-// ================== DECRYPT ==================
-let decryptMode = false;
-let decrypted = "";
-
-decryptButton?.addEventListener("click", () => {
-  decryptMode = true;
-  decrypted = "";
-  resultContent.textContent = "";
-  clearGrid();
-});
-
-cells.forEach((cell, i) => {
-  cell.addEventListener("click", () => {
-    if (decryptMode) cell.classList.toggle("active");
-  });
-});
-
-spaceBtn?.addEventListener("click", () => {
-  if (!decryptMode) return;
-  cells.forEach(c => c.classList.add("active"));
-});
-
-nextBtn?.addEventListener("click", () => {
-  if (!decryptMode) return;
-
-  const active = [...cells]
-    .map((c, i) => c.classList.contains("active") ? i : null)
-    .filter(i => i !== null);
-
-  if (active.length === 9) {
-    decrypted += " ";
-    resultContent.textContent = decrypted;
-    clearGrid();
-    return;
-  }
-
-  let isUpper = active.includes(4);
-  const filtered = active.filter(i => i !== 4).sort((a,b) => a-b);
-
-  for (const [letter, data] of Object.entries(LETTERS)) {
-    const sorted = [...data.coords].sort((a,b) => a-b);
-    if (arraysEqual(sorted, filtered)) {
-      decrypted += isUpper ? letter.toUpperCase() : letter;
-      break;
-    }
-  }
-
-  resultContent.textContent = decrypted || "...";
-  clearGrid();
-});
-
-function arraysEqual(a, b) {
-  return a.length === b.length && a.every((v, i) => v === b[i]);
-}
-
-// ================== COPY BUTTON ==================
-copyButton?.addEventListener("click", () => {
-  const text = resultContent.textContent;
-  if (text && !text.includes("appear here")) {
-    navigator.clipboard.writeText(text).then(() => {
-      copyButton.innerHTML = "<span>✅ Copied!</span>";
-      setTimeout(() => {
-        copyButton.innerHTML = "<span>Copy</span>";
-      }, 2000);
-    });
-  }
-});
-// ================== LOGO LINK COPY ==================
-const logoLink = document.getElementById("logoLink");
-const copyNotif = document.getElementById("copyNotif");
-
-// 🔥 REMPLACE CE LIEN PAR TON VRAI LIEN QUAND TU L'AURAS 🔥
-const SITE_URL = "https://samy-asl.github.io/Spatial-Decryption/";
-
-logoLink?.addEventListener("click", async () => {
-  try {
-    await navigator.clipboard.writeText(SITE_URL);
-    
-    // Afficher la notification
-    copyNotif.classList.add("show");
-    
-    // Masquer après 2 secondes
-    setTimeout(() => {
-      copyNotif.classList.remove("show");
-    }, 2000);
-    
-  } catch (err) {
-    console.error("Erreur de copie:", err);
-    // Fallback pour les navigateurs plus anciens
-    fallbackCopy(SITE_URL);
-  }
-});
-
-// Fonction de secours pour la copie
-function fallbackCopy(text) {
-  const textArea = document.createElement("textarea");
-  textArea.value = text;
-  textArea.style.position = "fixed";
-  textArea.style.opacity = "0";
-  document.body.appendChild(textArea);
-  textArea.select();
-  document.execCommand("copy");
-  document.body.removeChild(textArea);
-  
-  copyNotif.classList.add("show");
-  setTimeout(() => {
-    copyNotif.classList.remove("show");
-  }, 2000);
-}
-// Initialize
-translatePage();

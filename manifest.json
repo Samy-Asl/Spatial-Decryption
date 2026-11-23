@@ -1,11 +1,11 @@
 {
   "name": "Spatial Decryption",
   "short_name": "Spatial Decryption",
-  "description": "Détecrypteur par Matrice",
+  "description": "Visual text encoding with an isometric 3×3 grid",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#320763",
-  "theme_color": "#320763",
+  "background_color": "#090b0f",
+  "theme_color": "#090b0f",
   "orientation": "portrait",
   "icons": [
     {

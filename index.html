@@ -1,134 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Spatial Decryption</title>
-      <link rel="icon" href="./favicon.ico">
-      <link rel="icon" type="image/png" sizes="32x32" href="favicons/favicon-32x32.png">
-      <link rel="icon" type="image/png" sizes="16x16" href="favicons/favicon-16x16.png">
-      <link rel="apple-touch-icon" sizes="180x180" href="favicons/apple-touch-icon.png">
-      <link rel="apple-touch-icon" href="favicons/android-chrome-192x192.png">
-      <meta name="apple-mobile-web-app-capable" content="yes">
-      <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-      <meta name="apple-mobile-web-app-title" content="Spatial Decryption">
-      <link rel="manifest" href="manifest.json">
-      <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#090b0f">
+    <meta name="description" content="Turn a message into an animated 3×3 grid, then decode it one pattern at a time.">
+    <title>Spatial Decryption</title>
+    <link rel="icon" href="favicons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicons/apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
   </head>
   <body>
     <div class="container">
       <main class="app">
         <div class="background">
-          <h1>Welcome to Spatial Decryption</h1>
-          <p>This web page allows you to encrypt your data with a unique system.</p>
-          <div class="logo-container">
-            <img src="Spatial-logo.png" alt="Spatial Decryption Logo" class="main-logo" id="logoLink">
-            <div class="copy-notification" id="copyNotif">
-                <span>Link copied !</span>
-            </div>
-        </div>
-          <p><b>Made by Samy Asselah</b></p>
-          <p><b><a class ="Github" href="https://github.com/Samy-Asl">Github</a></b></p>
-          <p><b>Mail : samy.25.asl@gmail.com</b></p>
-          <div class="controls">
-            <input class="input-text" type="text" placeholder="Write in here ur text" id="inputText" />
-            <button class="encrypt-button" id="encryptButton">
-              <span>Encrypt</span>
+          <header class="intro">
+            <button class="logo-container" type="button" id="logoLink" aria-label="Copy page link">
+              <img src="Spatial-logo.png" alt="" class="main-logo" width="54" height="54">
             </button>
+            <div>
+              <h1>Spatial Decryption</h1>
+              <p>Turn text into a moving 3×3 grid and decode it by hand.</p>
+            </div>
+          </header>
+
+          <form class="controls" id="playForm">
+            <div class="input-header">
+              <label for="inputText">Your message</label>
+              <button class="text-button" type="button" id="exampleButton">Try an example</button>
+            </div>
+            <div class="input-row">
+              <input class="input-text" type="text" placeholder="Type a short message" id="inputText"
+                     aria-describedby="inputHint" autocomplete="off" spellcheck="false">
+              <button class="encrypt-button" type="submit" id="encryptButton">Play animation</button>
+              <button class="secondary-button" type="button" id="stopButton" hidden>Stop</button>
+            </div>
+            <p class="hint" id="inputHint">A–Z, a–z and spaces · 40 characters max</p>
+          </form>
+
+          <div class="stage">
+            <canvas id="gridCanvas" width="960" height="540" role="img"
+                    aria-label="Isometric 3×3 grid with cells numbered from 0 to 8"></canvas>
           </div>
-          
-          <button class="decrypt-button" id="decryptButton">
-            <span class="decrypt-text">Start decryption</span>
-            <span class="decrypt-arrow">→</span>
-          </button>
-          <div class="decrypt-result" id="decryptResult">
+          <div class="stage-legend">
+            <span><span class="swatch swatch-letter"></span>Letter pattern</span>
+            <span><span class="swatch swatch-center"></span>Blue center adds uppercase</span>
+            <span><span class="swatch swatch-space"></span>All nine = space</span>
+          </div>
+
+          <div class="stage-actions">
+            <button class="decrypt-button secondary-button" type="button" id="decryptButton"
+                    aria-controls="decodeControls" aria-expanded="false">Start decoding</button>
+            <a class="download-button secondary-button" id="downloadVideo" role="link" aria-disabled="true">Download video</a>
+          </div>
+          <p class="status" id="playStatus" role="status">Play the example, then replay its video to decode it.</p>
+          <details class="video-preview" id="videoPreview" hidden>
+            <summary>Replay video</summary>
+            <video id="recordedVideo" controls playsinline preload="metadata" aria-label="Recorded grid animation"></video>
+          </details>
+
+          <div class="decode-controls" id="decodeControls" hidden>
+            <p class="hint" id="decodeHelp">Select a pattern from the video, then choose Add character. Use the dictionary to match the numbers.</p>
+            <div class="grill" id="grill" role="group" aria-label="Select grid cells" aria-describedby="decodeHelp">
+              <button type="button" class="cell" data-index="0" aria-pressed="false">0</button>
+              <button type="button" class="cell" data-index="1" aria-pressed="false">1</button>
+              <button type="button" class="cell" data-index="2" aria-pressed="false">2</button>
+              <button type="button" class="cell" data-index="3" aria-pressed="false">3</button>
+              <button type="button" class="cell center-cell" data-index="4" aria-pressed="false">4</button>
+              <button type="button" class="cell" data-index="5" aria-pressed="false">5</button>
+              <button type="button" class="cell" data-index="6" aria-pressed="false">6</button>
+              <button type="button" class="cell" data-index="7" aria-pressed="false">7</button>
+              <button type="button" class="cell" data-index="8" aria-pressed="false">8</button>
+            </div>
+            <div class="action-buttons">
+              <button type="button" class="secondary-button" id="spaceBtn">Select space</button>
+              <button type="button" class="secondary-button" id="clearPattern">Clear selection</button>
+              <button type="button" class="encrypt-button" id="nextBtn">Add character</button>
+            </div>
+          </div>
+
+          <div class="decrypt-result" id="decryptResult" hidden>
             <div class="result-header">
-              <span class="result-title">Decryption result</span>
-            </div>
-            <div class="result-content" id="resultContent">
-              <span class="result-placeholder">The decrypted text will appear here...</span>
-            </div>
-            <button class="copy-button" id="copyButton">
-              <span>Copy</span>
-            </button>
-          </div>
-          <div class="grill" id="grill">
-            <div class="cell" data-index="0"></div>
-            <div class="cell" data-index="1"></div>
-            <div class="cell" data-index="2"></div>
-            <div class="cell" data-index="3"></div>
-            <div class="cell" data-index="4"></div>
-            <div class="cell" data-index="5"></div>
-            <div class="cell" data-index="6"></div>
-            <div class="cell" data-index="7"></div>
-            <div class="cell" data-index="8"></div>
-          </div>
-          <div class="action-buttons">
-            <button class="action-btn space-btn" id="spaceBtn">
-              <div class="btn-content">
-                <span class="btn-title">Space</span>
-                <span class="btn-subtitle">Press all cells at once</span>
+              <h2>Decoded message</h2>
+              <div class="result-actions">
+                <button type="button" class="text-button" id="clearResult" disabled>Reset</button>
+                <button type="button" class="text-button copy-button" id="copyButton" disabled>Copy</button>
               </div>
-            </button>
-            <button class="action-btn next-btn" id="nextBtn">
-              <div class="btn-content">
-                <span class="btn-title">Next Letter</span>
-                <span class="btn-subtitle">Move to next character</span>
-              </div>
-            </button>
+            </div>
+            <p class="result-placeholder" id="resultPlaceholder">Your decoded characters will appear here.</p>
+            <output class="result-content" id="resultContent" aria-label="Decoded message" hidden></output>
+            <p class="status" id="decodeStatus" role="status"></p>
           </div>
+
+          <footer class="credits">
+            <span>Made by Samy Asselah</span>
+            <a class="Github" href="https://github.com/Samy-Asl/Spatial-Decryption">GitHub</a>
+            <span id="copyNotif" role="status"></span>
+          </footer>
         </div>
       </main>
 
-      <aside class="dictionary">
-        <div class="lang-switch">
-          <button class="lang-btn active" data-lang="en">🇬🇧 EN</button>
-          <button class="lang-btn" data-lang="fr">🇫🇷 FR</button>
+      <aside class="dictionary" aria-label="Spatial dictionary">
+        <div class="lang-switch" role="group" aria-label="Dictionary language">
+          <button type="button" class="lang-btn" data-lang="en" aria-pressed="true">EN</button>
+          <button type="button" class="lang-btn" data-lang="fr" aria-pressed="false">FR</button>
         </div>
-        
-        <details open>
-          <summary data-translate="dict-title"> Spatial Dictionary</summary>
-          
+
+        <details id="dictionaryDetails" open>
+          <summary data-translate="title">Spatial dictionary</summary>
           <section class="dict-rules">
-            <h3 data-translate="rules-title">General Rules</h3>
-            <div class="rule-item">
-              <p data-translate="rule-grid">The grid is a 3×3 matrix indexed from 0 to 8:</p>
-              <pre>0 1 2
+            <p data-translate="grid">Read the grid from left to right and top to bottom.</p>
+            <pre aria-hidden="true">0 1 2
 3 4 5
 6 7 8</pre>
-            </div>
-            <div class="rule-item">
-              <p data-translate="rule-center">The central cell (4) is <b>FORBIDDEN</b> for simple letters. It is reserved for special symbols or separators.</p>
-            </div>
-            <div class="rule-item">
-              <p data-translate="rule-letter">A letter is defined by:</p>
-              <ul>
-                <li data-translate="rule-coords">a sequence of coordinates</li>
-                <li data-translate="rule-visual">a logical visual shape</li>
-                <li data-translate="rule-direction">a simple direction (line, angle, diagonal)</li>
-              </ul>
-            </div>
-            <div class="rule-item">
-              <p data-translate="rule-case">Uppercase letters use EXACTLY the same shape as lowercase letters. Case is handled at the logical level, not spatially.</p>
-            </div>
-            <div class="rule-item">
-              <p data-translate="rule-never">Letters must NEVER:</p>
-              <ul>
-                <li data-translate="rule-backtrack">backtrack unnecessarily</li>
-                <li data-translate="rule-cross">cross the grid without visual logic</li>
-              </ul>
-            </div>
+            <ul>
+              <li data-translate="order">For decoding, select the same numbered cells in any order.</li>
+              <li data-translate="center">Add the blue center (4) for uppercase.</li>
+              <li data-translate="space">Select all nine cells for a space.</li>
+            </ul>
           </section>
-
           <section class="dict-letters">
-            <h3 data-translate="letters-title">Letter Patterns</h3>
-            <div class="letter-grid" id="letterGrid">
-              <!-- Generated by JS -->
-            </div>
+            <h2 data-translate="patterns">Letter patterns</h2>
+            <div class="letter-grid" id="letterGrid"></div>
           </section>
         </details>
       </aside>
     </div>
-    <script src="Encrypt.js"></script>
+    <script type="module" src="Encrypt.js"></script>
   </body>
 </html>
