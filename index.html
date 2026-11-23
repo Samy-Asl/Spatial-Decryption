@@ -19,7 +19,7 @@
         <div class="background">
           <header class="intro">
             <button class="logo-container" type="button" id="logoLink" aria-label="Copy page link">
-              <img src="Spatial-logo.png" alt="" class="main-logo" width="54" height="54">
+              <img src="Spatial-logo.png" alt="" class="main-logo" width="84" height="84">
             </button>
             <div>
               <h1>Spatial Decryption</h1>
@@ -30,7 +30,7 @@
           <form class="controls" id="playForm">
             <div class="input-header">
               <label for="inputText">Your message</label>
-              <button class="text-button" type="button" id="exampleButton">Try an example</button>
+              <button class="text-button example-button" type="button" id="exampleButton">Try an example</button>
             </div>
             <div class="input-row">
               <input class="input-text" type="text" placeholder="Type a short message" id="inputText"
@@ -41,13 +41,13 @@
             <p class="hint" id="inputHint">A–Z, a–z and spaces · 40 characters max</p>
           </form>
 
-          <div class="stage">
+          <div class="stage" id="gridStage">
             <canvas id="gridCanvas" width="960" height="540" role="img"
                     aria-label="Isometric 3×3 grid with cells numbered from 0 to 8"></canvas>
           </div>
           <div class="stage-legend">
             <span><span class="swatch swatch-letter"></span>Letter pattern</span>
-            <span><span class="swatch swatch-center"></span>Blue center adds uppercase</span>
+            <span><span class="swatch swatch-center"></span>Blue 4 = uppercase</span>
             <span><span class="swatch swatch-space"></span>All nine = space</span>
           </div>
 
@@ -80,6 +80,7 @@
               <button type="button" class="secondary-button" id="clearPattern">Clear selection</button>
               <button type="button" class="encrypt-button" id="nextBtn">Add character</button>
             </div>
+            <a class="mobile-jump" href="#dictionaryDetails">Look up a letter</a>
           </div>
 
           <div class="decrypt-result" id="decryptResult" hidden>
@@ -105,6 +106,7 @@
 
       <aside class="dictionary" aria-label="Spatial dictionary">
         <div class="lang-switch" role="group" aria-label="Dictionary language">
+          <a class="mobile-jump return-link" href="#decryptButton">Back to the grid</a>
           <button type="button" class="lang-btn" data-lang="en" aria-pressed="true">EN</button>
           <button type="button" class="lang-btn" data-lang="fr" aria-pressed="false">FR</button>
         </div>

@@ -64,7 +64,8 @@ button:disabled, .download-button[aria-disabled] { cursor: default; opacity: .48
 
 .intro p {
   margin-top: .4rem;
-  font-size: .93rem;
+  font-size: 1rem;
+  line-height: 1.5;
   color: var(--muted);
 }
 
@@ -82,10 +83,9 @@ button:disabled, .download-button[aria-disabled] { cursor: default; opacity: .48
 
 .main-logo {
   display: block;
-  width: clamp(2rem, 6vw, 3.375rem);
+  width: clamp(4rem, 8vw, 5.25rem);
   height: auto;
   border-radius: .3rem;
-  filter: grayscale(1);
 }
 
 .input-header, .input-row, .stage-actions, .stage-legend,
@@ -97,7 +97,7 @@ button:disabled, .download-button[aria-disabled] { cursor: default; opacity: .48
 }
 
 .input-header, .result-header { justify-content: space-between; }
-.input-header { margin-bottom: .45rem; font-size: .875rem; font-weight: 650; }
+.input-header { margin-bottom: .65rem; font-size: 1rem; font-weight: 650; }
 .input-row { align-items: stretch; }
 
 .input-text {
@@ -117,14 +117,14 @@ button:disabled, .download-button[aria-disabled] { cursor: default; opacity: .48
 .encrypt-button, .secondary-button, .text-button, .lang-btn, .cell {
   border: 1px solid transparent;
   border-radius: .5rem;
-  font-size: .875rem;
+  font-size: 1rem;
   font-weight: 650;
   line-height: 1.25;
 }
 
 .encrypt-button, .secondary-button {
-  min-height: 2.65rem;
-  padding: .6rem .8rem;
+  min-height: 2.85rem;
+  padding: .65rem .9rem;
 }
 
 .encrypt-button {
@@ -154,22 +154,33 @@ button:disabled, .download-button[aria-disabled] { cursor: default; opacity: .48
 
 .text-button:hover:not(:disabled) { text-decoration: underline; }
 
+.example-button {
+  padding: .45rem .65rem;
+  border-color: #35527d;
+  background: #17243a;
+}
+
 .hint, .status, .stage-legend, .credits, .result-placeholder {
-  font-size: .82rem;
-  line-height: 1.45;
+  font-size: .95rem;
+  line-height: 1.5;
   color: var(--muted);
 }
 
-.hint, .status { margin-top: .45rem; }
+.hint, .status { margin-top: .65rem; }
 .status { min-height: 1.2em; }
 .status.error, #copyNotif.error { color: var(--error); }
 
 .stage {
   overflow: hidden;
-  margin-top: 1.05rem;
+  margin-top: 1.25rem;
   border: 1px solid var(--line);
   border-radius: .7rem;
   background: var(--page);
+}
+
+.stage.playing {
+  border-color: var(--strong-blue);
+  box-shadow: 0 0 1rem #438bff28;
 }
 
 #gridCanvas {
@@ -179,7 +190,7 @@ button:disabled, .download-button[aria-disabled] { cursor: default; opacity: .48
 }
 
 .stage-legend {
-  margin-block: .65rem 1rem;
+  margin-block: .85rem 1.15rem;
   column-gap: .9rem;
 }
 
@@ -196,7 +207,7 @@ button:disabled, .download-button[aria-disabled] { cursor: default; opacity: .48
 .swatch-space { border: 1px solid var(--muted); background: transparent; }
 
 .video-preview { margin-top: .85rem; }
-.video-preview summary { width: fit-content; color: var(--blue); font-size: .875rem; }
+.video-preview summary { width: fit-content; color: var(--blue); }
 .video-preview video {
   display: block;
   width: 100%;
@@ -235,7 +246,7 @@ button:disabled, .download-button[aria-disabled] { cursor: default; opacity: .48
 .cell[aria-pressed="true"] { background: var(--text); color: var(--page); }
 .cell.center-cell[aria-pressed="true"] { background: var(--strong-blue); color: #081328; }
 
-.result-header h2, .dict-letters h2 { font-size: .9rem; }
+.result-header h2, .dict-letters h2 { font-size: 1.05rem; }
 
 .result-content {
   display: block;
@@ -283,7 +294,7 @@ button:disabled, .download-button[aria-disabled] { cursor: default; opacity: .48
 .dict-rules, .dict-letters { padding: .8rem .9rem; border-top: 1px solid var(--line); }
 
 .dict-rules {
-  font-size: .85rem;
+  font-size: .97rem;
   line-height: 1.5;
   color: var(--muted);
 }
@@ -315,17 +326,48 @@ button:disabled, .download-button[aria-disabled] { cursor: default; opacity: .48
 }
 
 .letter-char { color: var(--blue); font-weight: 700; }
-.letter-coords { font: .75rem ui-monospace, monospace; color: var(--text); }
+.letter-coords { font: .9rem ui-monospace, monospace; color: var(--text); }
 
 .mini-grid { display: grid; grid-template-columns: repeat(3, .28rem); gap: .12rem; }
 .mini-grid > span { width: .28rem; height: .28rem; border-radius: .07rem; background: var(--line); }
 .mini-grid > .filled { background: var(--text); }
 
+.mobile-jump { display: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+  button, .download-button { transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease; }
+  button:active:not(:disabled), .download-button:active:not([aria-disabled]) { transform: scale(.97); }
+  .stage { transition: border-color 200ms ease, box-shadow 200ms ease; }
+  .decode-controls:not([hidden]), .video-preview:not([hidden]) { animation: enter 180ms ease-out; }
+  html:focus-within { scroll-behavior: smooth; }
+
+  @keyframes enter {
+    from { opacity: 0; transform: translateY(.4rem); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
 @media (max-width: 47rem) {
-  .container { grid-template-columns: minmax(0, 1fr); }
+  .container { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
+  .background { padding: 1.15rem; }
+  .intro { margin-bottom: 1.65rem; }
+  .stage-actions, .action-buttons { gap: .7rem; }
+  .stage-legend { row-gap: .65rem; margin-bottom: 1.35rem; }
+  .decode-controls, .decrypt-result { margin-top: 1.3rem; padding: 1rem; }
+  .grill { gap: .55rem; width: min(100%, 13rem); margin-block: 1rem; }
+  .cell { min-height: 3rem; }
+  .letter-item { min-height: 2.75rem; }
   .dictionary { position: static; max-height: none; }
+  .mobile-jump { display: inline-block; padding-block: .65rem; font-size: .95rem; }
+  .return-link { margin-inline-end: auto; }
+  .lang-switch { align-items: center; }
+  #dictionaryDetails, #decryptButton { scroll-margin-top: .75rem; }
 }
 
 @media (max-width: 29rem) {
-  .input-text { flex-basis: 100%; }
+  .intro h1 { font-size: clamp(1.6rem, 6vw, 2.15rem); }
+  .input-text { flex-basis: 100%; min-height: 3rem; }
+  .input-row > button, .stage-actions > * { flex: 1 1 auto; }
+  .input-row > button { min-height: 3rem; }
+  #gridCanvas, .video-preview video { aspect-ratio: 4 / 3; object-fit: cover; }
 }

@@ -42,20 +42,24 @@ function drawTile(context, { index, x, y }, amount) {
   const isCenter = index === CENTER;
 
   let colors = isCenter
-    ? ['#24354d', '#141c2b', '#19263a', '#a5c8ff']
-    : ['#242932', '#151820', '#1b2028', '#b2b9c6'];
+    ? ['#24354d', '#141c2b', '#19263a']
+    : ['#242932', '#151820', '#1b2028'];
   if (amount > 0) {
     colors = isCenter
-      ? ['#438bff', '#16449b', '#2a63d6', '#08142b']
-      : ['#f3f6fa', '#858e9e', '#bcc5d2', '#151820'];
+      ? ['#438bff', '#16449b', '#2a63d6']
+      : ['#f3f6fa', '#858e9e', '#bcc5d2'];
   }
 
-  const [topColor, leftColor, rightColor, labelColor] = colors;
+  const [topColor, leftColor, rightColor] = colors;
   face(context, leftColor, [left, front, bottomFront, [x - HALF_WIDTH, y]]);
   face(context, rightColor, [front, right, [x + HALF_WIDTH, y], bottomFront]);
   face(context, topColor, [back, right, front, left]);
-  context.fillStyle = labelColor;
-  context.fillText(String(index), x, top);
+  context.beginPath();
+  context.arc(x, top, 27, 0, 2 * Math.PI);
+  context.fillStyle = isCenter ? '#112749' : '#11151c';
+  context.fill();
+  context.fillStyle = isCenter ? '#d0e1ff' : '#f3f6fa';
+  context.fillText(String(index), x, top + 1);
 }
 
 function clamp(value) {
@@ -67,19 +71,37 @@ export function createGrid(canvas) {
   canvas.height = HEIGHT;
   const context = canvas.getContext('2d');
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let selectionFrame;
+  let currentAmounts;
 
   function render(amounts) {
+    currentAmounts = amounts;
     context.fillStyle = '#090b0f';
     context.fillRect(0, 0, WIDTH, HEIGHT);
-    context.font = '600 26px system-ui, sans-serif';
+    context.font = '750 42px system-ui, sans-serif';
     context.textAlign = 'center';
     context.textBaseline = 'middle';
 
     for (const tile of tiles) drawTile(context, tile, amounts[tile.index]);
   }
 
-  function draw(selected = []) {
-    render(CELLS.map(index => Number(selected.includes(index))));
+  function draw(selected = [], animate = false) {
+    cancelAnimationFrame(selectionFrame);
+    const target = CELLS.map(index => Number(selected.includes(index)));
+    if (!animate || reducedMotion.matches) {
+      render(target);
+      return;
+    }
+
+    const from = currentAmounts;
+    const start = performance.now();
+    function update(time) {
+      const progress = clamp((time - start) / RISE_TIME);
+      const eased = 1 - (1 - progress) ** 2;
+      render(target.map((amount, index) => from[index] + (amount - from[index]) * eased));
+      if (progress < 1) selectionFrame = requestAnimationFrame(update);
+    }
+    selectionFrame = requestAnimationFrame(update);
   }
 
   function playPattern(pattern, signal) {

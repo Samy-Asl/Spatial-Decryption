@@ -42,6 +42,29 @@ jobs:
               const stop = page.getByRole('button', { name: 'Stop', exact: true });
               assert.equal(await page.locator('.letter-item').count(), 26);
               assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+              for (const width of [320, 375, 430, 1024]) {
+                await page.setViewportSize({ width, height: 812 });
+                const layout = await page.evaluate(() => {
+                  const canvas = document.querySelector('canvas');
+                  const logo = document.querySelector('.main-logo');
+                  const bounds = canvas.getBoundingClientRect();
+                  return {
+                    noOverflow: document.documentElement.scrollWidth <= innerWidth,
+                    logoWidth: logo.getBoundingClientRect().width,
+                    logoFilter: getComputedStyle(logo).filter,
+                    digitFont: canvas.getContext('2d').font,
+                    buttonFont: getComputedStyle(document.querySelector('#encryptButton')).fontSize,
+                    gridRatio: bounds.width / bounds.height,
+                  };
+                });
+                assert.ok(layout.noOverflow, 'horizontal overflow at ' + width);
+                assert.ok(layout.logoWidth >= 64);
+                assert.equal(layout.logoFilter, 'none');
+                assert.match(layout.digitFont, /42px/);
+                assert.equal(layout.buttonFont, '16px');
+                if (width <= 430) assert.ok(Math.abs(layout.gridRatio - 4 / 3) < 0.02);
+              }
+              await page.setViewportSize({ width: 375, height: 812 });
               await text.fill('Été 2026!');
               await play.click();
               await page.getByText(/unsupported/).waitFor();
@@ -71,7 +94,11 @@ jobs:
               assert.equal(await page.evaluate(() => document.activeElement.textContent.trim()), '0');
               const next = page.getByRole('button', { name: 'Add character' });
               const cell = index => page.getByRole('button', { name: String(index), exact: true });
+              const restingGrid = await page.locator('canvas').evaluate(canvas => canvas.toDataURL());
               await cell(4).press('Space');
+              await page.waitForFunction(before => document.querySelector('canvas').toDataURL() !== before, restingGrid);
+              const dictionaryLink = page.getByRole('link', { name: 'Look up a letter' });
+              assert.equal(await dictionaryLink.getAttribute('href'), '#dictionaryDetails');
               await next.click();
               await page.getByText(/Unknown pattern/).waitFor();
               assert.equal(await cell(4).getAttribute('aria-pressed'), 'true');
