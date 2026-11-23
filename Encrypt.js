@@ -19,6 +19,7 @@ const resultPlaceholder = document.getElementById('resultPlaceholder');
 const decodeStatus = document.getElementById('decodeStatus');
 const copyButton = document.getElementById('copyButton');
 const clearResultButton = document.getElementById('clearResult');
+const stage = document.getElementById('gridStage');
 const canvas = document.getElementById('gridCanvas');
 const grid = createGrid(canvas);
 const selection = new Set();
@@ -37,6 +38,7 @@ function setMode(nextMode) {
   playButton.hidden = playing;
   stopButton.hidden = !playing;
   stopButton.disabled = !playing;
+  stage.classList.toggle('playing', playing);
   decodeButton.disabled = playing;
   clearResultButton.disabled = playing || decoded === '';
   decodeButton.textContent = decoding ? 'Exit decoding' : 'Start decoding';
@@ -50,11 +52,11 @@ function showStatus(element, message, isError = false) {
   element.classList.toggle('error', isError);
 }
 
-function drawSelection() {
+function drawSelection(animate = false) {
   for (const [index, cell] of cells.entries()) {
     cell.setAttribute('aria-pressed', selection.has(index));
   }
-  grid.draw([...selection]);
+  grid.draw([...selection], animate);
 }
 
 function clearSelection() {
@@ -185,14 +187,14 @@ for (const [index, cell] of cells.entries()) {
     if (selection.has(index)) selection.delete(index);
     else selection.add(index);
     showStatus(decodeStatus, '');
-    drawSelection();
+    drawSelection(true);
   });
 }
 
 document.getElementById('spaceBtn').addEventListener('click', () => {
   CELLS.forEach(index => selection.add(index));
   showStatus(decodeStatus, 'Space selected. Choose Add character to confirm.');
-  drawSelection();
+  drawSelection(true);
 });
 
 document.getElementById('clearPattern').addEventListener('click', () => {
